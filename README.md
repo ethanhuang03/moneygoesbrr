@@ -6,3 +6,6 @@
 4. Sell after 24 hours
 5. Profit?
 6. Repeat.
+### Dependencies Installation
+pip install pytest-playwright
+playwright install
