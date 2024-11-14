@@ -8,4 +8,5 @@
 6. Repeat.
 ### Dependencies Installation
 pip install pytest-playwright
+
 playwright install
