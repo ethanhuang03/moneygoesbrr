@@ -10,3 +10,9 @@
 pip install pytest-playwright
 
 playwright install
+## Quant Goes BRRT?
+Next steps:
+1. Decouple from yfinance and use IBKR data.
+2. Decouple from datetime so indicators can generalise into whatever timeframe, whether in minutes, days, years etc. 
+3. Get live data.
+4. Get historical data year limit
