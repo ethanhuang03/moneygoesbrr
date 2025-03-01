@@ -16,3 +16,5 @@ Next steps:
 2. Decouple from datetime so indicators can generalise into whatever timeframe, whether in minutes, days, years etc. 
 3. Get live data.
 4. Get historical data year limit
+### requirements
+winget install Microsoft.VisualStudio.2022.BuildTools --force --override "--wait --passive --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621"
