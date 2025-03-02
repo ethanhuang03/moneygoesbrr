@@ -2,9 +2,9 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-from data_retrieval import get_yfinance_data, load_csv_data
-from indicators import get_available_indicators, compute_indicator
-from display import build_stock_chart
+from submodules.data_retrieval import get_yfinance_data
+from submodules.indicators import get_available_indicators, compute_indicator
+from submodules.display import build_stock_chart
 
 
 st.set_page_config(layout="wide", page_title="Stock Market Analysis Platform")
