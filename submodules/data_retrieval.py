@@ -40,7 +40,8 @@ def get_yfinance_data(ticker: str, start_date: datetime, end_date: datetime, int
 
     # Ensure proper formatting
     df.reset_index(inplace=False)
-    return df, df.index.to_numpy(), df["Open"].to_numpy(), df["High"].to_numpy(), df["Low"].to_numpy(), df["Close"].to_numpy(), df["Volume"].to_numpy()
+    return df.index.to_numpy(), df["Open"].to_numpy(), df["High"].to_numpy(), df["Low"].to_numpy(), df["Close"].to_numpy(), df["Volume"].to_numpy()
+
 
 def load_csv_data(file_path: str):
     """Load user‐provided CSV data. The CSV must contain columns:
