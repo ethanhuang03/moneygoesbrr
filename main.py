@@ -1,13 +1,9 @@
 import streamlit as st
-import numpy as np
-import pandas as pd
-import inspect
 from datetime import datetime, timedelta
-import tulipy as ti
 from submodules.data_retrieval import get_yfinance_data
 from submodules.indicators import compute_indicator, indicator_info, get_valid_indicators
 from submodules.display import build_stock_chart
-
+from strategy import sample_strategy
 
 st.set_page_config(layout="wide", page_title="Stock Market Analysis Platform")
 ticker = st.sidebar.text_input("Ticker", "INTC")
@@ -50,11 +46,15 @@ for ind in enabled_indicators:
     except Exception as e:
         st.warning(f"Could not compute {ind}: {e}")
 
+# Load Strategy
+strategy_signals = sample_strategy(price_data, computed_indicators)
+
 fig = build_stock_chart(
     date_index=price_data["date"],
+    interval=interval,
     price=close_arr,
     computed_indicators=computed_indicators,
-    strategy_signals=None,
+    strategy_signals=strategy_signals,
     ticker=ticker
 )
 

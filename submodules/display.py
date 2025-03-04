@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '.'))
 from indicators import indicator_info
 
 
-def build_stock_chart(date_index, price, computed_indicators, strategy_signals=None, ticker=""):
+def build_stock_chart(date_index, interval, price, computed_indicators, strategy_signals=None, ticker=""):
     """
     Build an interactive Plotly chart.
 
@@ -70,8 +70,7 @@ def build_stock_chart(date_index, price, computed_indicators, strategy_signals=N
 
     # --- Plot buy/sell signals (if any) ---
     if strategy_signals:
-        x_buy, y_buy = strategy_signals.get("buy", ([], []))
-        x_sell, y_sell = strategy_signals.get("sell", ([], []))
+        x_buy, y_buy, x_sell, y_sell = strategy_signals
         fig.add_trace(
             go.Scatter(
                 x=x_buy, y=y_buy, mode='markers', name='Buy Signal',
@@ -100,9 +99,15 @@ def build_stock_chart(date_index, price, computed_indicators, strategy_signals=N
             )
         panel_row += 1
 
+    rangebreaks = [
+        dict(bounds=["sat", "mon"]),  # Hide weekends
+        dict(bounds=[16.5, 9.5], pattern="hour")  # Hide non-trading hours (16:30 to 9:30)
+    ] if interval in ["1m", "2m", "5m", "15m", "30m", "90m", "1h"] else []
+
     fig.update_layout(
         height=400 * n_panels,
         title_text=f"{ticker} Analysis",
-        showlegend=True
+        showlegend=True,
+        xaxis=dict(rangebreaks=rangebreaks)  
     )
     return fig
