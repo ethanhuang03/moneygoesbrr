@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from submodules.data_retrieval import get_yfinance_data
 from submodules.indicators import compute_indicator, indicator_info, get_valid_indicators
 from submodules.display import build_stock_chart
-from strategy import sample_strategy
+from strategy import SampleStrategy
 
 st.set_page_config(layout="wide", page_title="Stock Market Analysis Platform")
 ticker = st.sidebar.text_input("Ticker", "INTC")
@@ -46,8 +46,10 @@ for ind in enabled_indicators:
     except Exception as e:
         st.warning(f"Could not compute {ind}: {e}")
 
-# Load Strategy
-strategy_signals = sample_strategy(price_data, computed_indicators)
+# Load Strategy (automatically computes its required indicators if not already loaded)
+strategy = SampleStrategy(price_data, computed_indicators, user_indicator_params)
+strategy_signals = strategy.generate_signals()
+computed_indicators = strategy.computed_indicators
 
 fig = build_stock_chart(
     date_index=price_data["date"],

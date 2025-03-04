@@ -1,58 +1,106 @@
-def sample_strategy(price_data, indicators_result: dict):
-    """
-    A sample strategy that uses MACD, ADX, and RSI (if enabled) to generate buy/sell signals.
-    `data` is a dict with key "close" (numpy array).
-    `indicators_result` is a dict with computed indicator arrays (e.g., "MACD", "MACD_Signal", "ADX", "RSI").
-    Returns:
-       x_buy, y_buy, x_sell, y_sell: arrays of indices and prices where buy/sell signals occur.
-    """
-    print(indicators_result.keys())
-    try:
-        close = price_data["close"]
-        date = price_data["date"]
-        
-        # Unpack required indicators if available.
-        ema = indicators_result.get("ema")[1][0]
-        macd = indicators_result.get("macd")[1][0]
-        macd_signal = indicators_result.get("macd")[1][1]
-        macd_hist = indicators_result.get("macd")[1][2]
-        rsi = indicators_result.get("rsi")[1][0]
-        adx = indicators_result.get("adx")[1][0]
+from submodules.indicators import compute_indicator, indicator_info
+import numpy as np
 
-        print("Sample Strategy Loaded")
+class BaseStrategy:
+    def __init__(self, price_data, computed_indicators, indicator_params):
+        """
+        price_data: dict of price arrays.
+        computed_indicators: dict of already computed indicators.
+        indicator_params: dict of indicator parameters provided by the user.
+        """
+        self.price_data = price_data
+        # Use a copy so we don’t overwrite external computed indicators.
+        self.computed_indicators = computed_indicators.copy()
+        self.indicator_params = indicator_params
+        self.ensure_indicators_loaded()
 
-        common_length = min(len(close), len(date), len(ema), len(macd), len(macd_signal), len(macd_hist), len(rsi), len(adx))
+    def ensure_indicators_loaded(self):
+        """
+        For each required indicator (defined in required_indicators),
+        compute it if not already available. Use user-provided parameters if available.
+        """
+        required = self.required_indicators()
+        for ind, default_params in required.items():
+            if ind not in self.computed_indicators:
+                params = self.indicator_params.get(ind, default_params)
+                try:
+                    self.computed_indicators[ind] = compute_indicator(ind, self.price_data, params)
+                except Exception as e:
+                    print(f"Could not compute {ind}: {e}")
+                    print(f"Input params: {params}")
+                    print(f"Indicator options: {indicator_info(ind)['Options']}")                
 
-        # Align arrays to common length
-        close_common = close[-common_length:]
-        ema_common = ema[-common_length:]
-        macd_common = macd[-common_length:]
-        macd_signal_common = macd_signal[-common_length:]
-        macd_hist_common = macd_hist[-common_length:]
-        rsi_common = rsi[-common_length:]
-        adx_common = adx[-common_length:]
-        date_common = date[-common_length:]  
+    def required_indicators(self):
+        """
+        Should return a dictionary of required indicators and their default parameters.
+        e.g. {"ema": {"period": 14}, ...}
+        Override this method in subclasses.
+        """
+        raise NotImplementedError
 
-        # Strat
-        buy_condition = (
-            (macd_common > macd_signal_common) &
-            (macd_signal_common < 0) &
-            (adx_common >= 20) &
-            (rsi_common <= 40)
-        )
+    def align_data(self, arrays):
+        """
+        Align multiple arrays based on the minimum length among them.
+        Returns the aligned arrays.
+        """
+        min_len = min(len(a) for a in arrays)
+        return [a[-min_len:] for a in arrays]
 
-        sell_condition = (
-            (macd_common < macd_signal_common) &
-            (macd_signal_common > 0) &
-            (adx_common >= 20) &
-            (rsi_common >= 60)
-        )
+    def generate_signals(self):
+        """
+        Override this method to implement strategy logic.
+        Should return strategy signals (x_buy, y_buy, x_sell, y_sell).
+        """
+        raise NotImplementedError
 
-        x_buy = date_common[buy_condition]
-        y_buy = close_common[buy_condition]
-        x_sell = date_common[sell_condition]
-        y_sell = close_common[sell_condition]
 
-        return x_buy, y_buy, x_sell, y_sell
-    except:
-        return None
+class SampleStrategy(BaseStrategy):
+    def required_indicators(self):
+        # Define required indicators for the sample strategy with default parameters.
+        return {
+            "ema": {"period": 14},
+            "macd": {"short period": 12, "long period": 26, "signal period": 9},
+            "rsi": {"period": 14},
+            "adx": {"period": 14}
+        }
+    
+    def generate_signals(self):
+        try:
+            close = self.price_data["close"]
+            date = self.price_data["date"]
+
+            ema = self.computed_indicators["ema"][1][0]
+            macd = self.computed_indicators["macd"][1][0]
+            macd_signal = self.computed_indicators["macd"][1][1]
+            macd_hist = self.computed_indicators["macd"][1][2]
+            rsi = self.computed_indicators["rsi"][1][0]
+            adx = self.computed_indicators["adx"][1][0]
+
+            # Align all arrays so that their lengths match
+            close, date, ema, macd, macd_signal, macd_hist, rsi, adx = self.align_data(
+                [close, date, ema, macd, macd_signal, macd_hist, rsi, adx]
+            )
+
+            # Define strategy conditions (buy and sell conditions)
+            buy_condition = (
+                (macd > macd_signal) &
+                (macd_signal < 0) &
+                (adx >= 20) &
+                (rsi <= 40)
+            )
+            sell_condition = (
+                (macd < macd_signal) &
+                (macd_signal > 0) &
+                (adx >= 20) &
+                (rsi >= 60)
+            )
+
+            x_buy = date[buy_condition]
+            y_buy = close[buy_condition]
+            x_sell = date[sell_condition]
+            y_sell = close[sell_condition]
+
+            return x_buy, y_buy, x_sell, y_sell
+        except Exception as e:
+            print(f"Error generating signals: {e}")
+            return None
