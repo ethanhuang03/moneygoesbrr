@@ -1,6 +1,7 @@
 from submodules.indicators import compute_indicator, indicator_info
 import numpy as np
 
+
 class BaseStrategy:
     def __init__(self, price_data, computed_indicators, indicator_params):
         """
