@@ -1,4 +1,5 @@
 # Stock Market Analysis Platform
+![image](image.png)
 
 This repository provides a modular system for retrieving stock data, computing technical indicators, displaying interactive charts, and generating buy/sell signals based on a sample strategy. It leverages **Streamlit**, **yfinance**, and **tulipy** to offer a user-friendly interface for stock analysis and strategy prototyping.
 
