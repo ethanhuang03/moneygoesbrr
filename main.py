@@ -6,6 +6,7 @@ except RuntimeError:
     asyncio.set_event_loop(asyncio.new_event_loop())
 
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 from datetime import datetime, timedelta
 from submodules.data_retrieval import get_yfinance_data, get_ibkr_data
 from submodules.indicators import compute_indicator, indicator_info, get_valid_indicators
@@ -18,8 +19,23 @@ end_date = st.sidebar.date_input("End Date", datetime.today())
 
 duration = st.sidebar.selectbox("Duration", ["1 D", "5 D", "1 M", "3 M", "6 M", "1 Y", "2 Y", "5 Y", "10 Y"])
 interval = st.sidebar.selectbox("Interval", ["1 min", "2 mins", "5 mins", "15 mins", "30 mins", "1 hour", "1 day", "1 month"])
-date_index, open_arr, high_arr, low_arr, close_arr, volume_arr = get_ibkr_data(ticker, end_date, duration, interval)
 
+# Map the user-selected interval to milliseconds for auto-refresh:
+interval_mapping = {
+    "1 min": 60 * 1000,
+    "2 mins": 2 * 60 * 1000,
+    "5 mins": 5 * 60 * 1000,
+    "15 mins": 15 * 60 * 1000,
+    "30 mins": 30 * 60 * 1000,
+    "1 hour": 60 * 60 * 1000,
+    "1 day": 24 * 60 * 60 * 1000,
+    "1 month": 30 * 24 * 60 * 60 * 1000,  # approximate month as 30 days
+}
+refresh_interval = interval_mapping.get(interval, 60000)
+st_autorefresh(interval=refresh_interval, key="chartrefresh")
+st.write(f"Page refreshed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+date_index, open_arr, high_arr, low_arr, close_arr, volume_arr = get_ibkr_data(ticker, end_date, duration, interval)
 
 price_data = {
     "date": date_index,
