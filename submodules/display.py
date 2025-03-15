@@ -98,16 +98,18 @@ def build_stock_chart(date_index, interval, price, computed_indicators, strategy
                 row=panel_row, col=1
             )
         panel_row += 1
-
+    '''
+    # TODO: Generalise it so it is does the same for different brockerage.
     rangebreaks = [
         dict(bounds=["sat", "mon"]),  # Hide weekends
         dict(bounds=[16.5, 9.5], pattern="hour")  # Hide non-trading hours (16:30 to 9:30)
     ] if interval in ["1m", "2m", "5m", "15m", "30m", "90m", "1h"] else []
-
+    '''
     fig.update_layout(
         height=400 * n_panels,
         title_text=f"{ticker} Analysis",
-        showlegend=True,
-        xaxis=dict(rangebreaks=rangebreaks)  
+        showlegend=True#,
+        #xaxis=dict(rangebreaks=rangebreaks)  
     )
+    fig.update_xaxes(type='category')
     return fig

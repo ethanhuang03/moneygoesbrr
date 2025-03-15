@@ -1,7 +1,20 @@
 import yfinance as yf
+import ib_async
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+
+
+def get_ibkr_data(ticker: str, endDateTime: datetime, durationStr: str, barSizeSetting: str):
+    """Retrieve data from Interactive Brokers with handling for API limitations."""
+    ib = ib_async.IB()
+    ib.connect('127.0.0.1', 7497, clientId=1) # Use Paper Trading Account
+    ib.reqMarketDataType(4)  # Delayed data to avoid API limitations
+    contract = ib_async.Stock(ticker, "SMART", "USD")
+    bars = ib.reqHistoricalData(contract, endDateTime=endDateTime, durationStr=durationStr, barSizeSetting=barSizeSetting, whatToShow="TRADES", useRTH=True)
+    df = ib_async.util.df(bars)
+    ib.disconnect()
+    return df["date"].to_numpy(), df["open"].to_numpy(), df["high"].to_numpy(), df["low"].to_numpy(), df["close"].to_numpy(), df["volume"].to_numpy()
 
 
 def get_yfinance_data(ticker: str, start_date: datetime, end_date: datetime, interval: str):

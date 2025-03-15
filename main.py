@@ -1,20 +1,25 @@
+import asyncio
+
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
 import streamlit as st
 from datetime import datetime, timedelta
-from submodules.data_retrieval import get_yfinance_data
+from submodules.data_retrieval import get_yfinance_data, get_ibkr_data
 from submodules.indicators import compute_indicator, indicator_info, get_valid_indicators
 from submodules.display import build_stock_chart
 from strategy import SampleStrategy
 
 st.set_page_config(layout="wide", page_title="Stock Market Analysis Platform")
 ticker = st.sidebar.text_input("Ticker", "INTC")
-start_date = st.sidebar.date_input("Start Date", datetime.today()-timedelta(days=90))
 end_date = st.sidebar.date_input("End Date", datetime.today())
-interval = st.sidebar.selectbox("Interval", ["1m", "2m", "5m", "15m", "30m", "90m", "1h", "1d", "1mo"])
-start_datetime = datetime.combine(start_date, datetime.strptime("09:30", "%H:%M").time())
-end_datetime = datetime.combine(end_date, datetime.strptime("16:30", "%H:%M").time())
 
-# Get data from Yahoo Finance
-date_index, open_arr, high_arr, low_arr, close_arr, volume_arr = get_yfinance_data(ticker, start_datetime, end_datetime, interval)
+duration = st.sidebar.selectbox("Duration", ["1 D", "5 D", "1 M", "3 M", "6 M", "1 Y", "2 Y", "5 Y", "10 Y"])
+interval = st.sidebar.selectbox("Interval", ["1 min", "2 mins", "5 mins", "15 mins", "30 mins", "1 hour", "1 day", "1 month"])
+date_index, open_arr, high_arr, low_arr, close_arr, volume_arr = get_ibkr_data(ticker, end_date, duration, interval)
+
 
 price_data = {
     "date": date_index,

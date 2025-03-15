@@ -59,7 +59,7 @@ class SampleStrategy(BaseStrategy):
     def required_indicators(self):
         # Define required indicators for the sample strategy with default parameters.
         return {
-            "ema": {"period": 14},
+            "ema": {"period": 200},
             "macd": {"short period": 12, "long period": 26, "signal period": 9},
             "rsi": {"period": 14},
             "adx": {"period": 14}

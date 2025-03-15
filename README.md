@@ -86,7 +86,7 @@ This repository provides a modular system for retrieving stock data, computing t
     ```
 3. **Install Dependencies**:
     ```bash
-    pip install streamlit yfinance tulipy plotly pandas numpy
+    pip install streamlit yfinance tulipy plotly pandas numpy ib_async
     ```
     Make sure your Python version is compatible (3.8+ recommended due to dependencies like `tulipy`).
 
