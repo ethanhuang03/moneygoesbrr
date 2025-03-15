@@ -8,12 +8,17 @@ except RuntimeError:
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime, timedelta
+import numpy as np
 from submodules.data_retrieval import get_yfinance_data, get_ibkr_data
 from submodules.indicators import compute_indicator, indicator_info, get_valid_indicators
 from submodules.display import build_stock_chart
 from strategy import SampleStrategy
 
 st.set_page_config(layout="wide", page_title="Stock Market Analysis Platform")
+
+if 'last_signal' not in st.session_state:
+    st.session_state['last_signals'] = None
+
 ticker = st.sidebar.text_input("Ticker", "INTC")
 end_date = st.sidebar.date_input("End Date", datetime.today())
 
@@ -71,6 +76,51 @@ for ind in enabled_indicators:
 strategy = SampleStrategy(price_data, computed_indicators, user_indicator_params)
 strategy_signals = strategy.generate_signals()
 computed_indicators = strategy.computed_indicators
+
+# Check for new signals and notify user
+if strategy_signals is not None:
+    x_buy, y_buy, x_sell, y_sell = strategy_signals
+    # If no previous signals exist, store the current ones
+    if st.session_state['last_signals'] is None:
+        st.session_state['last_signals'] = {
+            'x_buy': x_buy,
+            'y_buy': y_buy,
+            'x_sell': x_sell,
+            'y_sell': y_sell
+        }
+    else:
+        last_signals = st.session_state['last_signals']
+        new_buy = False
+        new_sell = False
+
+        # Check buy signals: if length differs or content differs, flag as new
+        if len(x_buy) != len(last_signals['x_buy']):
+            new_buy = True
+        else:
+            if not np.array_equal(x_buy, last_signals['x_buy']):
+                new_buy = True
+
+        # Check sell signals similarly
+        if len(x_sell) != len(last_signals['x_sell']):
+            new_sell = True
+        else:
+            if not np.array_equal(x_sell, last_signals['x_sell']):
+                new_sell = True
+
+        if new_buy:
+            st.write("New BUY signal detected!")
+            st.balloons()  # Optional: visual cue
+        if new_sell:
+            st.write("New SELL signal detected!")
+            st.balloons()  # Optional: visual cue
+
+        # Update stored signals with current ones
+        st.session_state['last_signals'] = {
+            'x_buy': x_buy,
+            'y_buy': y_buy,
+            'x_sell': x_sell,
+            'y_sell': y_sell
+        }
 
 fig = build_stock_chart(
     date_index=price_data["date"],
